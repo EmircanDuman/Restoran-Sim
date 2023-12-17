@@ -16,7 +16,6 @@ public class Musteri extends Thread{
   Musteri(){
     id = count++;
     if(r.nextInt(5)==0) oncelikli = true;
-    System.out.println("added musteri "+ id);
   }
 
   public Boolean getTaken() {

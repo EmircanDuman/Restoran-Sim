@@ -77,7 +77,6 @@ public class Garson extends Thread {
           App.Masa[i] = musteri.id;
           musteri.setTaken(true);
 
-          System.out.println("masa given to " + musteri.id + " by garson:" + id);
           App.panel.repaint();
           iterator.remove();
           return true;

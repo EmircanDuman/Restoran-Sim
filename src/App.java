@@ -12,6 +12,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class App extends JFrame implements ActionListener, ChangeListener {
 
+  //PANELE RENGINE GÖRE ÇİZDİRİLMİYOR?
+
   static int toplamKazanc = 0;
   static volatile Integer[] Masa;
   static MusteriGenerator musteriGenerator;
@@ -270,7 +272,6 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   }
 
   void ThreadleriBaslat(){
-    System.out.println("thread baslat");
     oyunIlkCalistirma = false;
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
@@ -281,7 +282,6 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   }
 
   void ThreadleriYenidenBaslat(){
-    System.out.println("thread yeniden baslat");
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
     oyunDevamBool = true;
@@ -340,9 +340,22 @@ public class App extends JFrame implements ActionListener, ChangeListener {
                 g.setColor(new Color(208, 212, 95));
                 g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
               }
-              else{
-                g.setColor(new Color(29, 156, 0));
-                g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+              //BURDA ICERI GIRMIYOR?
+              else {
+                for(Musteri musteri: musteriArrayList){
+                  System.out.println("test");
+                  if(musteri.id == Masa[sayac]){
+                    if(musteri.oncelikli){
+                      g.setColor(new Color(252, 186, 3));
+                      g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+                    }
+                    else {
+                      g.setColor(new Color(29, 156, 0));
+                      g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+                    }
+                    break;
+                  }
+                }
               }
             }
             else {
