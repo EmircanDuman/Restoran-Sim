@@ -12,16 +12,17 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class App extends JFrame implements ActionListener, ChangeListener {
 
-  //PANELE RENGINE GÖRE ÇİZDİRİLMİYOR?
+  //AŞÇILARDA SIKINTI VAR GALİBA
 
   static int toplamKazanc = 0;
-  static volatile Integer[] Masa;
+  static volatile Masa[] masa;
   static MusteriGenerator musteriGenerator;
 
   static ArrayList<Musteri> musteriArrayList;
   static ArrayList<Asci> asciArrayList;
   static ArrayList<Garson> garsonArrayList;
   static ArrayList<Kasiyer> kasiyerArrayList;
+  static ArrayList<Musteri> siparisArrayList;
 
   static Integer masaSayisi = 6;
   static Integer garsonSayisi = 3;
@@ -40,6 +41,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
   public static final ReentrantLock musteriLock = new ReentrantLock();
   public static final ReentrantLock masaLock = new ReentrantLock();
+  public static final ReentrantLock siparisLock = new ReentrantLock();
 
   static JPanel panel;
   static Font font = new Font("TimesRoman", Font.BOLD, 24);
@@ -240,8 +242,10 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     Kasiyer.count = 1;
     Musteri.count = 1;
 
-    Masa = new Integer[masaSayisi];
-    for (int i=0; i<masaSayisi; i++) Masa[i] = -1;
+    masa = new Masa[masaSayisi];
+    for (int i=0; i<masaSayisi; i++) masa[i] = new Masa();
+
+    siparisArrayList = new ArrayList<>();
 
     asciArrayList = new ArrayList<>();
     for(int i=0; i<asciSayisi; i++) asciArrayList.add(new Asci());
@@ -277,7 +281,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     musteriGenerator.start();
 
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).start();
-    // asci ve kasiyer icin de yap
+    for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).start();
     // asci ve kasiyer icin de yap
   }
 
@@ -285,18 +289,12 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
     oyunDevamBool = true;
-
-    for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).continueThread();
-    // asci ve kasiyer icin de yap
-    // asci ve kasiyer icin de yap
   }
 
   void ThreadleriDurdur(){
     if(musteriGenerator.isAlive()) musteriGenerator.stop();
 
-    for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).pauseThread();
-    // asci ve kasiyer icin de yap
-    // asci ve kasiyer icin de yap
+    oyunDevamBool = false;
   }
 
   void ThreadleriSonlandir(){
@@ -304,7 +302,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
     if (oyunEkraniBool){
       for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).stop();
-      // asci ve kasiyer icin de yap
+      for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).stop();
       // asci ve kasiyer icin de yap
       }
   }
@@ -336,25 +334,18 @@ public class App extends JFrame implements ActionListener, ChangeListener {
         for(int j=0; j<kutuSayisiY; j++){
           for(int i=0; i<kutuSayisiX; i++){
             if(sayac<masaSayisi){
-              if(Masa[sayac]==-1){
+              if(masa[sayac].musteri == null){
                 g.setColor(new Color(208, 212, 95));
                 g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
               }
-              //BURDA ICERI GIRMIYOR?
               else {
-                for(Musteri musteri: musteriArrayList){
-                  System.out.println("test");
-                  if(musteri.id == Masa[sayac]){
-                    if(musteri.oncelikli){
-                      g.setColor(new Color(252, 186, 3));
-                      g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
-                    }
-                    else {
-                      g.setColor(new Color(29, 156, 0));
-                      g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
-                    }
-                    break;
-                  }
+                if(masa[sayac].musteri.oncelikli){
+                  g.setColor(new Color(204, 0, 153));
+                  g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+                }
+                else {
+                  g.setColor(new Color(51, 153, 102));
+                  g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
                 }
               }
             }

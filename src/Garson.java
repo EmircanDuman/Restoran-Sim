@@ -5,17 +5,6 @@ public class Garson extends Thread {
   static int count = 1;
   private int id;
   private volatile int ilgileniyor = -1;
-  private volatile boolean paused = false;
-
-  // Method to pause the thread
-  public void pauseThread() {
-    paused = true;
-  }
-
-  // Method to continue the thread
-  public void continueThread() {
-    paused = false;
-  }
 
   @Override
   public void run() {
@@ -32,14 +21,29 @@ public class Garson extends Thread {
           while (iterator.hasNext()) {
             Musteri musteri = iterator.next();
 
-            if (!oncelikliHandled && !musteri.getTaken() && musteri.oncelikli && !paused && App.oyunDevamBool) {
+            if (!oncelikliHandled && !musteri.getTaken() && musteri.oncelikli && App.oyunDevamBool) {
               handleSuccess = handleMusteri(musteri, iterator);
               oncelikliHandled = true;
+
+              App.siparisLock.lock();
+              try {
+              App.siparisArrayList.add(musteri);
+              }
+              finally {
+                App.siparisLock.unlock();
+              }
               break;
             }
 
-            if (!musteri.getTaken() && !oncelikliHandled && !paused && App.oyunDevamBool) {
+            if (!musteri.getTaken() && !oncelikliHandled && App.oyunDevamBool) {
               handleSuccess = handleMusteri(musteri, iterator);
+              App.siparisLock.lock();
+              try {
+                App.siparisArrayList.add(musteri);
+              }
+              finally {
+                App.siparisLock.unlock();
+              }
               break;
             }
           }
@@ -47,8 +51,8 @@ public class Garson extends Thread {
           App.musteriLock.unlock();
         }
 
-        if (paused) {
-          while (paused && !Thread.interrupted()) {
+        if (!App.oyunDevamBool) {
+          while (!App.oyunDevamBool && !Thread.interrupted()) {
             Thread.sleep(100); // Add a small delay to reduce CPU usage while paused
           }
         }
@@ -56,7 +60,9 @@ public class Garson extends Thread {
         if (handleSuccess && !Thread.interrupted()) {
           // Sleep only if handleMusteri succeeded and the thread is not interrupted
           try {
+
             Thread.sleep(2000);
+
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             break;
@@ -72,9 +78,9 @@ public class Garson extends Thread {
     App.masaLock.lock();
     try {
       for (int i = 0; i < App.masaSayisi; i++) {
-        if (App.Masa[i] == -1) {
+        if (App.masa[i].musteri == null) {
           ilgileniyor = musteri.id;
-          App.Masa[i] = musteri.id;
+          App.masa[i].musteri = musteri;
           musteri.setTaken(true);
 
           App.panel.repaint();

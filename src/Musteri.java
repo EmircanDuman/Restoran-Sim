@@ -10,7 +10,7 @@ public class Musteri extends Thread{
 
   @Override
   public void run(){
-
+    System.out.println("I HAVE MY FOOD: "+id);
   }
 
   Musteri(){
