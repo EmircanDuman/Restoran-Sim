@@ -32,13 +32,13 @@ public class Garson extends Thread {
           while (iterator.hasNext()) {
             Musteri musteri = iterator.next();
 
-            if (!oncelikliHandled && !musteri.getTaken() && musteri.oncelikli && !paused) {
+            if (!oncelikliHandled && !musteri.getTaken() && musteri.oncelikli && !paused && App.oyunDevamBool) {
               handleSuccess = handleMusteri(musteri, iterator);
               oncelikliHandled = true;
               break;
             }
 
-            if (!musteri.getTaken() && !oncelikliHandled && !paused) {
+            if (!musteri.getTaken() && !oncelikliHandled && !paused && App.oyunDevamBool) {
               handleSuccess = handleMusteri(musteri, iterator);
               break;
             }

@@ -12,13 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class App extends JFrame implements ActionListener, ChangeListener {
 
-  /*
-  * asci, garson, kasiyer, musteri countlarını sıfırlayan
-  * bu listeleri bosaltan
-  * threadlerin tamamını durduran
-  * masaları sıfırlandığına emin olan bir fonksiyon lazım
-  * */
-
   static int toplamKazanc = 0;
   static volatile Integer[] Masa;
   static MusteriGenerator musteriGenerator;
@@ -40,7 +33,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static Integer musteriKazanci = 1;
 
   boolean oyunEkraniBool = false;
-  boolean oyunDevamBool = false;
+  static boolean oyunDevamBool = false;
+  static boolean oyunIlkCalistirma = true;
 
   public static final ReentrantLock musteriLock = new ReentrantLock();
   public static final ReentrantLock masaLock = new ReentrantLock();
@@ -239,6 +233,11 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     panel.removeAll();
     toplamKazanc = 0;
 
+    Asci.count = 1;
+    Garson.count = 1;
+    Kasiyer.count = 1;
+    Musteri.count = 1;
+
     Masa = new Integer[masaSayisi];
     for (int i=0; i<masaSayisi; i++) Masa[i] = -1;
 
@@ -271,6 +270,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   }
 
   void ThreadleriBaslat(){
+    System.out.println("thread baslat");
+    oyunIlkCalistirma = false;
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
 
@@ -280,8 +281,10 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   }
 
   void ThreadleriYenidenBaslat(){
+    System.out.println("thread yeniden baslat");
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
+    oyunDevamBool = true;
 
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).continueThread();
     // asci ve kasiyer icin de yap
@@ -294,6 +297,16 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).pauseThread();
     // asci ve kasiyer icin de yap
     // asci ve kasiyer icin de yap
+  }
+
+  void ThreadleriSonlandir(){
+    if(musteriGenerator != null) musteriGenerator.stop();
+
+    if (oyunEkraniBool){
+      for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).stop();
+      // asci ve kasiyer icin de yap
+      // asci ve kasiyer icin de yap
+      }
   }
 
   App(){
@@ -389,14 +402,17 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     }
     if(e.getSource()==ayarlarGeriButonu || e.getSource() == oyunEkraniGeriButonu){
       AnaEkran();
+      ThreadleriSonlandir();
       oyunEkraniBool = false;
       oyunDevamButonu.setText("Devam");
+      oyunDevamBool = false;
+      oyunIlkCalistirma = true;
     }
     if(e.getSource()==oyunDevamButonu){
       if(!oyunDevamBool){
         oyunDevamButonu.setText("Durdur");
         oyunDevamBool = true;
-        if(musteriGenerator == null){
+        if(oyunIlkCalistirma){
           ThreadleriBaslat();
         }
         else {
