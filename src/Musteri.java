@@ -10,7 +10,20 @@ public class Musteri extends Thread{
 
   @Override
   public void run(){
-    System.out.println("I HAVE MY FOOD: "+id);
+    try{
+      Thread.sleep(3000);
+      App.kasaLock.lock();
+      try {
+        App.kasaArrayList.add(this);
+        System.out.println("Added " +id +" to list");
+      }
+      finally {
+        App.kasaLock.unlock();
+      }
+    }
+    catch (InterruptedException e){
+      throw new RuntimeException(e);
+    }
   }
 
   Musteri(){

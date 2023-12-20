@@ -1,3 +1,5 @@
+import java.util.Iterator;
+
 public class Asci extends Thread{
 
   static int count = 1;
@@ -15,16 +17,25 @@ public class Asci extends Thread{
         //musteri listesinden bostaki musterileri cek
         App.siparisLock.lock();
         try {
-          for (Musteri musteri: App.siparisArrayList){
-            if(musteri1 == null){
+          Iterator<Musteri> iterator = App.siparisArrayList.iterator();
+
+          while (iterator.hasNext()) {
+            Musteri musteri = iterator.next();
+
+            if (musteri1 == null) {
               musteri1 = musteri;
-              App.siparisArrayList.remove(musteri);
+              iterator.remove();
+              continue;
             }
-            if(musteri1 != null && musteri2 == null){
+
+            if (musteri1 != null && musteri2 == null) {
               musteri2 = musteri;
-              App.siparisArrayList.remove(musteri);
+              iterator.remove();
             }
-            if(musteri1 != null && musteri2 != null) break;
+
+            if (musteri1 != null && musteri2 != null) {
+              break;
+            }
           }
         }
         finally {
@@ -36,7 +47,7 @@ public class Asci extends Thread{
           musteri1.start();
         } else if (musteri1 != null && musteri2 != null) {
           Thread.sleep(3000);
-          musteri1.start();
+          //musteri1.start();
           musteri2.start();
         }
         else {

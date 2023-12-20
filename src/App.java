@@ -12,7 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class App extends JFrame implements ActionListener, ChangeListener {
 
-  //AŞÇILARDA SIKINTI VAR GALİBA
 
   static int toplamKazanc = 0;
   static volatile Masa[] masa;
@@ -23,8 +22,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static ArrayList<Garson> garsonArrayList;
   static ArrayList<Kasiyer> kasiyerArrayList;
   static ArrayList<Musteri> siparisArrayList;
+  static ArrayList<Musteri> kasaArrayList;
 
-  static Integer masaSayisi = 6;
+  static Integer masaSayisi = 100;
   static Integer garsonSayisi = 3;
   static Integer asciSayisi = 2;
   static Integer kasiyerSayisi = 1;
@@ -42,6 +42,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   public static final ReentrantLock musteriLock = new ReentrantLock();
   public static final ReentrantLock masaLock = new ReentrantLock();
   public static final ReentrantLock siparisLock = new ReentrantLock();
+  public static final ReentrantLock kasaLock = new ReentrantLock();
 
   static JPanel panel;
   static Font font = new Font("TimesRoman", Font.BOLD, 24);
@@ -246,6 +247,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     for (int i=0; i<masaSayisi; i++) masa[i] = new Masa();
 
     siparisArrayList = new ArrayList<>();
+    kasaArrayList = new ArrayList<>();
 
     asciArrayList = new ArrayList<>();
     for(int i=0; i<asciSayisi; i++) asciArrayList.add(new Asci());
@@ -276,13 +278,14 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   }
 
   void ThreadleriBaslat(){
+
     oyunIlkCalistirma = false;
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
 
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).start();
     for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).start();
-    // asci ve kasiyer icin de yap
+    for (int i=0; i<kasiyerSayisi; i++) kasiyerArrayList.get(i).start();
   }
 
   void ThreadleriYenidenBaslat(){
@@ -303,7 +306,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     if (oyunEkraniBool){
       for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).stop();
       for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).stop();
-      // asci ve kasiyer icin de yap
+      for (int i=0; i<kasiyerSayisi; i++) kasiyerArrayList.get(i).stop();
       }
   }
 
