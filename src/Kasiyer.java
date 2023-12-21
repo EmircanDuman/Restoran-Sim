@@ -7,19 +7,31 @@ public class Kasiyer extends Thread{
   public void run(){
     try {
       while (!isInterrupted()){
-        App.kasaLock.lock();
-        try {
-          if(App.kasaArrayList.isEmpty() || !App.oyunDevamBool){
-            Thread.sleep(100);
-          }
-          else {
+        if(!App.kasaArrayList.isEmpty() && App.oyunDevamBool){
+          App.kasaLock.lock();
+          App.musteriLock.lock();
+          App.masaLock.lock();
+          try {
             Thread.sleep(1000);
-            System.out.println("Removed "+ App.kasaArrayList.get(0).id +" by " +id);
+
+            for(int i=0; i<App.masaSayisi; i++){
+              if(App.masa[i].musteri == App.kasaArrayList.get(0)){
+                App.masa[i].musteri = null;
+                break;
+              }
+            }
+            App.musteriArrayList.remove(App.kasaArrayList.get(0));
             App.kasaArrayList.remove(0);
+
+          }
+          finally {
+            App.kasaLock.unlock();
+            App.musteriLock.unlock();
+            App.masaLock.unlock();
           }
         }
-        finally {
-          App.kasaLock.unlock();
+        else {
+          Thread.sleep(100);
         }
       }
     }

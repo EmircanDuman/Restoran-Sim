@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class App extends JFrame implements ActionListener, ChangeListener {
 
+  //iterator remove yoruma aldım, hata çıkabilir dikkat
 
   static int toplamKazanc = 0;
   static volatile Masa[] masa;
@@ -45,6 +46,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   public static final ReentrantLock kasaLock = new ReentrantLock();
 
   static JPanel panel;
+  static JInternalFrame internalFrame;
+  static JTable internalTable;
+
   static Font font = new Font("TimesRoman", Font.BOLD, 24);
   Color primary = new Color(147, 191, 207);
 
@@ -114,8 +118,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
           finally {
             App.musteriLock.unlock();
           }
-          Thread.sleep(200);
-          //Thread.sleep((random.nextInt(5)+1)*1000);
+          Thread.sleep((random.nextInt(5)+1)*1000);
         }
       }
       catch (InterruptedException e){
@@ -262,6 +265,14 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
     oyunEkraniBool = true;
 
+    internalFrame = new JInternalFrame("", false, true, false, false);
+    internalFrame.setSize(600, 600);
+    internalFrame.setLocation(300, 100);
+    internalFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+    internalFrame.setVisible(false);
+
+    panel.add(internalFrame);
+
     panel.add(bekleyenMusteriButonu);
     panel.add(garsonlarButonu);
     panel.add(ascilarButonu);
@@ -334,21 +345,33 @@ public class App extends JFrame implements ActionListener, ChangeListener {
         int kutuX = (1000-20*2-((kutuSayisiX-1)*aralik))/kutuSayisiX;
         int kutuY = (750-30-60-20-20-((kutuSayisiY-1)*aralik))/kutuSayisiY;
 
+        g.setFont(new Font("TimesRoman", Font.BOLD, 18));
         for(int j=0; j<kutuSayisiY; j++){
           for(int i=0; i<kutuSayisiX; i++){
             if(sayac<masaSayisi){
               if(masa[sayac].musteri == null){
                 g.setColor(new Color(208, 212, 95));
                 g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+
+                g.setColor(Color.black);
+                g.drawString("Bos", 20+i*(kutuX+aralik), 110+j*(kutuY+aralik) + kutuY/2);
               }
               else {
                 if(masa[sayac].musteri.oncelikli){
                   g.setColor(new Color(204, 0, 153));
                   g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+
+                  g.setColor(Color.black);
+                  g.drawString("Musteri: "+ masa[sayac].musteri.id, 20+i*(kutuX+aralik), 110+j*(kutuY+aralik) + kutuY/2);
+                  g.drawString(masa[sayac].musteri.durum, 20+i*(kutuX+aralik), 110+j*(kutuY+aralik)+ 20 + kutuY/2);
                 }
                 else {
                   g.setColor(new Color(51, 153, 102));
                   g.fillRect(20+i*(kutuX+aralik), 110+j*(kutuY+aralik), kutuX, kutuY);
+
+                  g.setColor(Color.black);
+                  g.drawString("Musteri: "+ masa[sayac].musteri.id, 20+i*(kutuX+aralik), 110+j*(kutuY+aralik) + kutuY/2);
+                  g.drawString(masa[sayac].musteri.durum, 20+i*(kutuX+aralik), 110+j*(kutuY+aralik)+ 20 + kutuY/2);
                 }
               }
             }
@@ -432,9 +455,38 @@ public class App extends JFrame implements ActionListener, ChangeListener {
         ThreadleriDurdur();
       }
     }
-    if(e.getSource()==bekleyenMusteriButonu){
+    if (e.getSource() == bekleyenMusteriButonu) {
+      DefaultTableModel tableModel = new DefaultTableModel();
+      tableModel.addColumn("Musteri");
+      tableModel.addColumn("Durum");
 
+      musteriLock.lock();
+      try {
+        for (Musteri musteri : musteriArrayList) {
+          tableModel.addRow(new Object[]{musteri.id, musteri.durum});
+        }
+      } finally {
+        musteriLock.unlock();
+      }
+
+      internalTable = new JTable(tableModel);
+      internalTable.setFont(font);
+
+      DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+      cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+      for (int i = 0; i < internalTable.getColumnCount(); i++) {
+        internalTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+      }
+      internalTable.setRowHeight(30);
+      internalTable.getTableHeader().setReorderingAllowed(false);
+      internalTable.getTableHeader().setResizingAllowed(false);
+
+      JScrollPane scrollPane = new JScrollPane(internalTable);  // Set the JTable as the viewport view
+      scrollPane.setBounds(0, 0, 600, 600);
+      internalFrame.add(scrollPane);
+      internalFrame.setVisible(true);
     }
+
     if(e.getSource()==garsonlarButonu){
 
     }

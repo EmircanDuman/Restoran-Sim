@@ -82,9 +82,10 @@ public class Garson extends Thread {
           ilgileniyor = musteri.id;
           App.masa[i].musteri = musteri;
           musteri.setTaken(true);
+          musteri.durum = "Yemek bekliyor";
 
           App.panel.repaint();
-          iterator.remove();
+          //iterator.remove();
           return true;
         }
       }

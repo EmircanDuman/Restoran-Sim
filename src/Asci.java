@@ -47,7 +47,7 @@ public class Asci extends Thread{
           musteri1.start();
         } else if (musteri1 != null && musteri2 != null) {
           Thread.sleep(3000);
-          //musteri1.start();
+          musteri1.start();
           musteri2.start();
         }
         else {

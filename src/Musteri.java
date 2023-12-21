@@ -7,15 +7,18 @@ public class Musteri extends Thread{
   int id;
   boolean oncelikli = false;
   private volatile Boolean taken = false;
+  volatile String durum;
 
   @Override
   public void run(){
     try{
+      durum = "Yemek yiyor";
+
       Thread.sleep(3000);
       App.kasaLock.lock();
       try {
         App.kasaArrayList.add(this);
-        System.out.println("Added " +id +" to list");
+        durum = "Kasa bekliyor";
       }
       finally {
         App.kasaLock.unlock();
@@ -29,6 +32,7 @@ public class Musteri extends Thread{
   Musteri(){
     id = count++;
     if(r.nextInt(5)==0) oncelikli = true;
+    durum = "Sıra bekliyor";
   }
 
   public Boolean getTaken() {
