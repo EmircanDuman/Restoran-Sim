@@ -11,12 +11,15 @@ public class Kasiyer extends Thread{
           App.kasaLock.lock();
           App.musteriLock.lock();
           App.masaLock.lock();
+          App.kazancLock.lock();
           try {
             Thread.sleep(1000);
 
             for(int i=0; i<App.masaSayisi; i++){
               if(App.masa[i].musteri == App.kasaArrayList.get(0)){
                 App.masa[i].musteri = null;
+                App.toplamKazanc += App.musteriKazanci;
+                App.oyunBilgileri.setText("Kazanc: " + App.toplamKazanc);
                 break;
               }
             }
@@ -28,6 +31,7 @@ public class Kasiyer extends Thread{
             App.kasaLock.unlock();
             App.musteriLock.unlock();
             App.masaLock.unlock();
+            App.kazancLock.unlock();
           }
         }
         else {

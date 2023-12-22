@@ -17,15 +17,16 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static int toplamKazanc = 0;
   static volatile Masa[] masa;
   static MusteriGenerator musteriGenerator;
+  static MaliyetPeriyotThread maliyetGenerator;
 
-  static ArrayList<Musteri> musteriArrayList;
+  static volatile ArrayList<Musteri> musteriArrayList;
   static ArrayList<Asci> asciArrayList;
   static ArrayList<Garson> garsonArrayList;
   static ArrayList<Kasiyer> kasiyerArrayList;
   static ArrayList<Musteri> siparisArrayList;
   static ArrayList<Musteri> kasaArrayList;
 
-  static Integer masaSayisi = 100;
+  static Integer masaSayisi = 6;
   static Integer garsonSayisi = 3;
   static Integer asciSayisi = 2;
   static Integer kasiyerSayisi = 1;
@@ -35,6 +36,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static Integer asciMaliyeti = 1;
   static Integer kasiyerMaliyeti = 1;
   static Integer musteriKazanci = 1;
+  static Integer maliyetPeriyodu = 10;
 
   boolean oyunEkraniBool = false;
   static boolean oyunDevamBool = false;
@@ -44,6 +46,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   public static final ReentrantLock masaLock = new ReentrantLock();
   public static final ReentrantLock siparisLock = new ReentrantLock();
   public static final ReentrantLock kasaLock = new ReentrantLock();
+  public static final ReentrantLock kazancLock = new ReentrantLock();
 
   static JPanel panel;
   static JInternalFrame internalFrame;
@@ -67,8 +70,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
   JSlider oyunHiziSlider = new JSlider(1, 4, 2);
   JLabel oyunuHiziLabel = new JLabel("Oyun hızı: 2");
-  JLabel oyunBilgileri = new JLabel("<html>Kazanc: "+ toplamKazanc+"<br><br>Bekleyen Musteriler: "+ "?/?" +"<br><br>Garsonlar: ?/"+garsonSayisi+"<br><br>Ascilar: ?/"+asciSayisi+
-          "<br><br>Kasiyerler: ?/"+kasiyerSayisi+"</html>");
+  static JLabel oyunBilgileri = new JLabel("Kazanc: " + toplamKazanc);
 
   JTable ayarlarTable;
 
@@ -128,6 +130,29 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
   }
 
+  private class MaliyetPeriyotThread extends Thread{
+    @Override
+    public void run(){
+      try {
+        while (!isInterrupted()){
+          Thread.sleep(maliyetPeriyodu*1000);
+          kazancLock.lock();
+          try {
+            if(oyunDevamBool)
+              toplamKazanc -= (masaMaliyeti*masaSayisi) + (garsonMaliyeti*garsonSayisi) + (asciMaliyeti*asciSayisi) + (kasiyerMaliyeti*kasiyerSayisi);
+              oyunBilgileri.setText("Kazanc: "+toplamKazanc);
+          }
+          finally {
+            kazancLock.unlock();
+          }
+        }
+      }
+      catch (InterruptedException e){
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
   //Sadece ikinci col'un editable olduğu table modeli
   private static class CustomTableModel extends DefaultTableModel {
     public CustomTableModel(Object[][] data, Object[] columnNames) {
@@ -178,6 +203,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
               case "Asci maliyeti" -> asciMaliyeti = num;
               case "Kasiyer maliyeti" -> kasiyerMaliyeti = num;
               case "Musteri kazanci" -> musteriKazanci = num;
+              case "Maliyet Periyodu" -> maliyetPeriyodu = num;
               default -> {
               }
             }
@@ -211,7 +237,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
               {"Garson maliyeti", garsonMaliyeti},
               {"Asci maliyeti", asciMaliyeti},
               {"Kasiyer maliyeti", kasiyerMaliyeti},
-              {"Musteri kazanci", musteriKazanci}
+              {"Musteri kazanci", musteriKazanci},
+              {"Maliyet Periyodu", maliyetPeriyodu}
       };
       Object[] columnNames = {"Ayarlar", "Deger"};
 
@@ -294,6 +321,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
 
+    maliyetGenerator = new MaliyetPeriyotThread();
+    maliyetGenerator.start();
+
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).start();
     for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).start();
     for (int i=0; i<kasiyerSayisi; i++) kasiyerArrayList.get(i).start();
@@ -307,12 +337,14 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
   void ThreadleriDurdur(){
     if(musteriGenerator.isAlive()) musteriGenerator.stop();
+    if(maliyetGenerator.isAlive()) maliyetGenerator.stop();
 
     oyunDevamBool = false;
   }
 
   void ThreadleriSonlandir(){
     if(musteriGenerator != null) musteriGenerator.stop();
+    if(maliyetGenerator != null) maliyetGenerator.stop();
 
     if (oyunEkraniBool){
       for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).stop();
@@ -437,6 +469,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       oyunDevamButonu.setText("Devam");
       oyunDevamBool = false;
       oyunIlkCalistirma = true;
+      toplamKazanc = 0;
+      oyunBilgileri.setText("Kazanc:" + toplamKazanc);
     }
     if(e.getSource()==oyunDevamButonu){
       if(!oyunDevamBool){
@@ -456,6 +490,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       }
     }
     if (e.getSource() == bekleyenMusteriButonu) {
+      internalFrame.getContentPane().removeAll();
+
       DefaultTableModel tableModel = new DefaultTableModel();
       tableModel.addColumn("Musteri");
       tableModel.addColumn("Durum");
@@ -485,13 +521,74 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       scrollPane.setBounds(0, 0, 600, 600);
       internalFrame.add(scrollPane);
       internalFrame.setVisible(true);
+      internalFrame.repaint();
     }
 
     if(e.getSource()==garsonlarButonu){
+      internalFrame.getContentPane().removeAll();
 
+      DefaultTableModel tableModel = new DefaultTableModel();
+      tableModel.addColumn("Garson");
+      tableModel.addColumn("Ilgilendigi Musteri");
+
+        for (Garson garson : garsonArrayList) {
+          tableModel.addRow(new Object[]{garson.id, garson.ilgileniyor});
+        }
+
+      internalTable = new JTable(tableModel);
+      internalTable.setFont(font);
+
+      DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+      cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+      for (int i = 0; i < internalTable.getColumnCount(); i++) {
+        internalTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+      }
+      internalTable.setRowHeight(30);
+      internalTable.getTableHeader().setReorderingAllowed(false);
+      internalTable.getTableHeader().setResizingAllowed(false);
+
+      JScrollPane scrollPane = new JScrollPane(internalTable);  // Set the JTable as the viewport view
+      scrollPane.setBounds(0, 0, 600, 600);
+      internalFrame.add(scrollPane);
+      internalFrame.setVisible(true);
+      internalFrame.repaint();
     }
     if(e.getSource()==ascilarButonu){
+      internalFrame.getContentPane().removeAll();
 
+      DefaultTableModel tableModel = new DefaultTableModel();
+      tableModel.addColumn("Asci");
+      tableModel.addColumn("Ilgilendigi Musteri");
+
+      for (Asci asci: asciArrayList) {
+        if(asci.musteri1 != null && asci.musteri2 == null){
+          tableModel.addRow(new Object[]{asci.id, asci.musteri1.id});
+        }
+        if(asci.musteri1 != null && asci.musteri2 != null){
+          tableModel.addRow(new Object[]{asci.id, asci.musteri1.id + " ve " + asci.musteri2.id});
+        }
+        else {
+          tableModel.addRow(new Object[]{asci.id, "bekliyor"});
+        }
+      }
+
+      internalTable = new JTable(tableModel);
+      internalTable.setFont(font);
+
+      DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+      cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+      for (int i = 0; i < internalTable.getColumnCount(); i++) {
+        internalTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+      }
+      internalTable.setRowHeight(30);
+      internalTable.getTableHeader().setReorderingAllowed(false);
+      internalTable.getTableHeader().setResizingAllowed(false);
+
+      JScrollPane scrollPane = new JScrollPane(internalTable);  // Set the JTable as the viewport view
+      scrollPane.setBounds(0, 0, 600, 600);
+      internalFrame.add(scrollPane);
+      internalFrame.setVisible(true);
+      internalFrame.repaint();
     }
     if(e.getSource()==kasiyerlerButonu){
 

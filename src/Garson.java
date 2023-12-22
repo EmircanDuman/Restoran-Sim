@@ -3,8 +3,8 @@ import java.util.Iterator;
 public class Garson extends Thread {
 
   static int count = 1;
-  private int id;
-  private volatile int ilgileniyor = -1;
+  int id;
+  volatile int ilgileniyor = -1;
 
   @Override
   public void run() {
