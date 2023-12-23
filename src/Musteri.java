@@ -19,7 +19,6 @@ public class Musteri extends Thread{
         throw new RuntimeException(e);
       }
       if(sayac >= 20){
-        System.out.println(this.id +" kendini sildi");
         App.musteriLock.lock();
         try {
         App.musteriArrayList.remove(this);

@@ -6,6 +6,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,6 +20,15 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static volatile Masa[] masa;
   static MusteriGenerator musteriGenerator;
   static MaliyetPeriyotThread maliyetGenerator;
+  static FileWriter fileWriter;
+
+  static {
+    try {
+      fileWriter = new FileWriter("Adimlar.txt");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   static volatile ArrayList<Musteri> musteriArrayList;
   static ArrayList<Asci> asciArrayList;
@@ -460,8 +471,10 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     this.setVisible(true);
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     new App();
+    fileWriter.write("test");
+
   }
 
   @Override
