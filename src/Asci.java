@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Iterator;
 
 public class Asci extends Thread{
@@ -25,11 +26,13 @@ public class Asci extends Thread{
             if (musteri1 == null) {
               musteri1 = musteri;
               iterator.remove();
+              App.DosyaYaz(id + " no'lu asci, "+ musteri1.id +" no'lu musterinin yemegini pisirdi");
               continue;
             }
 
             if (musteri1 != null && musteri2 == null) {
               musteri2 = musteri;
+              App.DosyaYaz(id + " no'lu asci, "+ musteri1.id +" ve " + musteri2.id +" no'lu musterinin yemegini pisirdi");
               iterator.remove();
             }
 
@@ -37,8 +40,9 @@ public class Asci extends Thread{
               break;
             }
           }
-        }
-        finally {
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        } finally {
           App.siparisLock.unlock();
         }
 

@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 public class Kasiyer extends Thread{
 
   static int count = 1;
@@ -20,6 +22,7 @@ public class Kasiyer extends Thread{
 
             for(int i=0; i<App.masaSayisi; i++){
               if(App.masa[i].musteri == App.kasaArrayList.get(0)){
+                App.DosyaYaz(id +" no'lu kasiyer, " +App.masa[i].musteri.id +" no'lu musterinin odemesini aldi");
                 App.masa[i].musteri = null;
                 App.toplamKazanc += App.musteriKazanci;
                 App.oyunBilgileri.setText("Kazanc: " + App.toplamKazanc);
@@ -29,8 +32,9 @@ public class Kasiyer extends Thread{
             App.musteriArrayList.remove(App.kasaArrayList.get(0));
             App.kasaArrayList.remove(0);
 
-          }
-          finally {
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          } finally {
             App.kasaLock.unlock();
             App.musteriLock.unlock();
             App.masaLock.unlock();

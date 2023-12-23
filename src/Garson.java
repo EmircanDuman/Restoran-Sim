@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Iterator;
 
 public class Garson extends Thread {
@@ -79,6 +80,7 @@ public class Garson extends Thread {
     try {
       for (int i = 0; i < App.masaSayisi; i++) {
         if (App.masa[i].musteri == null) {
+          App.DosyaYaz(id +" no'lu garson " + musteri.id +" no'lu musterinin siparisini aldi");
           ilgileniyor = musteri.id;
           App.masa[i].musteri = musteri;
           musteri.setTaken(true);
@@ -89,6 +91,8 @@ public class Garson extends Thread {
           return true;
         }
       }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     } finally {
       App.masaLock.unlock();
     }

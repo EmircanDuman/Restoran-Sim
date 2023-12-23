@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Random;
 
 public class Musteri extends Thread{
@@ -21,9 +22,11 @@ public class Musteri extends Thread{
       if(sayac >= 20){
         App.musteriLock.lock();
         try {
+          App.DosyaYaz(id + " no'lu musteri siradan ayrildi");
         App.musteriArrayList.remove(this);
-        }
-        finally {
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        } finally {
           App.musteriLock.unlock();
         }
         stop();
@@ -37,9 +40,11 @@ public class Musteri extends Thread{
       App.kasaLock.lock();
       try {
         App.kasaArrayList.add(this);
+        App.DosyaYaz(id + " no'lu musteri yemegini yedi");
         durum = "Kasa bekliyor";
-      }
-      finally {
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      } finally {
         App.kasaLock.unlock();
       }
     }

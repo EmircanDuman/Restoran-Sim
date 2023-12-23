@@ -6,8 +6,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,13 +22,11 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static volatile Masa[] masa;
   static MusteriGenerator musteriGenerator;
   static MaliyetPeriyotThread maliyetGenerator;
-  static FileWriter fileWriter;
+  private static final Object lock = new Object();
 
-  static {
-    try {
-      fileWriter = new FileWriter("Adimlar.txt");
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+  static synchronized public void DosyaYaz(String yazi) throws IOException {
+    synchronized (lock){
+      Files.writeString(Paths.get("Adimlar.txt"), yazi + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
   }
 
@@ -118,7 +118,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     return result;
   }
 
-  private class MusteriGenerator extends Thread{
+  private static class MusteriGenerator extends Thread{
 
     Random random = new Random();
 
@@ -145,7 +145,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
 
   }
 
-  private class MaliyetPeriyotThread extends Thread{
+  private static class MaliyetPeriyotThread extends Thread{
     @Override
     public void run(){
       try {
@@ -153,9 +153,10 @@ public class App extends JFrame implements ActionListener, ChangeListener {
           Thread.sleep(maliyetPeriyodu*1000);
           kazancLock.lock();
           try {
-            if(oyunDevamBool)
+            if(oyunDevamBool){
               toplamKazanc -= (masaMaliyeti*masaSayisi) + (garsonMaliyeti*garsonSayisi) + (asciMaliyeti*asciSayisi) + (kasiyerMaliyeti*kasiyerSayisi);
               oyunBilgileri.setText("Kazanc: "+toplamKazanc);
+            }
           }
           finally {
             kazancLock.unlock();
@@ -334,7 +335,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     panel.repaint();
   }
 
-  void ThreadleriBaslat(){
+  void ThreadleriBaslat() throws IOException {
+
+    DosyaYaz("Oyun baslatildi");
 
     oyunIlkCalistirma = false;
     musteriGenerator = new MusteriGenerator();
@@ -350,20 +353,23 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     for (int i=0; i<kasiyerSayisi; i++) kasiyerArrayList.get(i).start();
   }
 
-  void ThreadleriYenidenBaslat(){
+  void ThreadleriYenidenBaslat() throws IOException {
+    DosyaYaz("Oyun yeniden baslatildi");
     musteriGenerator = new MusteriGenerator();
     musteriGenerator.start();
     oyunDevamBool = true;
   }
 
-  void ThreadleriDurdur(){
+  void ThreadleriDurdur() throws IOException {
+    DosyaYaz("Oyun durduruldu");
     if(musteriGenerator.isAlive()) musteriGenerator.stop();
     if(maliyetGenerator.isAlive()) maliyetGenerator.stop();
 
     oyunDevamBool = false;
   }
 
-  void ThreadleriSonlandir(){
+  void ThreadleriSonlandir() throws IOException {
+    DosyaYaz("Oyun sonlandirildi");
     if(musteriGenerator != null) musteriGenerator.stop();
     if(maliyetGenerator != null) maliyetGenerator.stop();
 
@@ -471,9 +477,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     this.setVisible(true);
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args){
     new App();
-    fileWriter.write("test");
 
   }
 
@@ -487,7 +492,11 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     }
     if(e.getSource()==ayarlarGeriButonu || e.getSource() == oyunEkraniGeriButonu){
       AnaEkran();
-      ThreadleriSonlandir();
+      try {
+        ThreadleriSonlandir();
+      } catch (IOException ex) {
+        throw new RuntimeException(ex);
+      }
       oyunEkraniBool = false;
       oyunDevamButonu.setText("Devam");
       oyunDevamBool = false;
@@ -500,16 +509,28 @@ public class App extends JFrame implements ActionListener, ChangeListener {
         oyunDevamButonu.setText("Durdur");
         oyunDevamBool = true;
         if(oyunIlkCalistirma){
-          ThreadleriBaslat();
+          try {
+            ThreadleriBaslat();
+          } catch (IOException ex) {
+            throw new RuntimeException(ex);
+          }
         }
         else {
-          ThreadleriYenidenBaslat();
+          try {
+            ThreadleriYenidenBaslat();
+          } catch (IOException ex) {
+            throw new RuntimeException(ex);
+          }
         }
       }
       else {
         oyunDevamButonu.setText("Devam");
         oyunDevamBool = false;
-        ThreadleriDurdur();
+        try {
+          ThreadleriDurdur();
+        } catch (IOException ex) {
+          throw new RuntimeException(ex);
+        }
       }
     }
     if (e.getSource() == bekleyenMusteriButonu) {
