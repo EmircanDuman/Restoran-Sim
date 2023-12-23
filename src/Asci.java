@@ -42,13 +42,8 @@ public class Asci extends Thread{
           App.siparisLock.unlock();
         }
 
-        if(musteri1 != null && musteri2 == null){
+        if(musteri1 != null){
           Thread.sleep(3000);
-          musteri1.start();
-        } else if (musteri1 != null && musteri2 != null) {
-          Thread.sleep(3000);
-          musteri1.start();
-          musteri2.start();
         }
         else {
           Thread.sleep(100);

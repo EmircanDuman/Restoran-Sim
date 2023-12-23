@@ -35,8 +35,10 @@ public class App extends JFrame implements ActionListener, ChangeListener {
   static Integer garsonMaliyeti = 1;
   static Integer asciMaliyeti = 1;
   static Integer kasiyerMaliyeti = 1;
-  static Integer musteriKazanci = 1;
+  static Integer musteriKazanci = 5;
   static Integer maliyetPeriyodu = 10;
+  static Integer musteriPeriyodu = 5;
+  static Integer musteriAkisModeli = 1;
 
   boolean oyunEkraniBool = false;
   static boolean oyunDevamBool = false;
@@ -116,11 +118,13 @@ public class App extends JFrame implements ActionListener, ChangeListener {
           App.musteriLock.lock();
           try {
           musteriArrayList.add(new Musteri());
+          musteriArrayList.get(musteriArrayList.size()-1).start();
           }
           finally {
             App.musteriLock.unlock();
           }
-          Thread.sleep((random.nextInt(5)+1)*1000);
+          if(musteriAkisModeli == 1) Thread.sleep(musteriPeriyodu * 100);
+          else Thread.sleep((random.nextInt(5)+1)*1000);
         }
       }
       catch (InterruptedException e){
@@ -204,6 +208,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
               case "Kasiyer maliyeti" -> kasiyerMaliyeti = num;
               case "Musteri kazanci" -> musteriKazanci = num;
               case "Maliyet Periyodu" -> maliyetPeriyodu = num;
+              case "Musteri Periyodu * (100ms)" -> musteriPeriyodu = num;
+              case "Musteri Akisi (1 / 0)" -> musteriAkisModeli = num;
               default -> {
               }
             }
@@ -238,7 +244,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
               {"Asci maliyeti", asciMaliyeti},
               {"Kasiyer maliyeti", kasiyerMaliyeti},
               {"Musteri kazanci", musteriKazanci},
-              {"Maliyet Periyodu", maliyetPeriyodu}
+              {"Maliyet Periyodu", maliyetPeriyodu},
+              {"Musteri Periyodu * (100ms)", musteriPeriyodu},
+              {"Musteri Akisi (1 / 0)", musteriAkisModeli}
       };
       Object[] columnNames = {"Ayarlar", "Deger"};
 
@@ -325,7 +333,9 @@ public class App extends JFrame implements ActionListener, ChangeListener {
     maliyetGenerator.start();
 
     for (int i=0; i<garsonSayisi; i++) garsonArrayList.get(i).start();
+
     for (int i=0; i<asciSayisi; i++) asciArrayList.get(i).start();
+
     for (int i=0; i<kasiyerSayisi; i++) kasiyerArrayList.get(i).start();
   }
 
@@ -499,7 +509,8 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       musteriLock.lock();
       try {
         for (Musteri musteri : musteriArrayList) {
-          tableModel.addRow(new Object[]{musteri.id, musteri.durum});
+          if(musteri.oncelikli) tableModel.addRow(new Object[]{musteri.id + " (Oncelikli)", musteri.durum});
+          else tableModel.addRow(new Object[]{musteri.id, musteri.durum});
         }
       } finally {
         musteriLock.unlock();
@@ -522,6 +533,7 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       internalFrame.add(scrollPane);
       internalFrame.setVisible(true);
       internalFrame.repaint();
+
     }
 
     if(e.getSource()==garsonlarButonu){
@@ -591,7 +603,38 @@ public class App extends JFrame implements ActionListener, ChangeListener {
       internalFrame.repaint();
     }
     if(e.getSource()==kasiyerlerButonu){
+      internalFrame.getContentPane().removeAll();
 
+      DefaultTableModel tableModel = new DefaultTableModel();
+      tableModel.addColumn("Kasiyerler");
+      tableModel.addColumn("Ilgilendigi Musteri");
+
+      for (Kasiyer kasiyer: kasiyerArrayList) {
+        if(kasiyer.ilgileniyor != -1){
+          tableModel.addRow(new Object[]{kasiyer.id, kasiyer.ilgileniyor});
+        }
+        else {
+          tableModel.addRow(new Object[]{kasiyer.id, "bekliyor"});
+        }
+      }
+
+      internalTable = new JTable(tableModel);
+      internalTable.setFont(font);
+
+      DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+      cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+      for (int i = 0; i < internalTable.getColumnCount(); i++) {
+        internalTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+      }
+      internalTable.setRowHeight(30);
+      internalTable.getTableHeader().setReorderingAllowed(false);
+      internalTable.getTableHeader().setResizingAllowed(false);
+
+      JScrollPane scrollPane = new JScrollPane(internalTable);  // Set the JTable as the viewport view
+      scrollPane.setBounds(0, 0, 600, 600);
+      internalFrame.add(scrollPane);
+      internalFrame.setVisible(true);
+      internalFrame.repaint();
     }
     if(e.getSource()==ilerletButonu){
 

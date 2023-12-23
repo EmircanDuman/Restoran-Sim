@@ -8,9 +8,29 @@ public class Musteri extends Thread{
   boolean oncelikli = false;
   private volatile Boolean taken = false;
   volatile String durum;
+  int sayac = 0;
 
   @Override
   public void run(){
+    while (!taken){
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+      if(sayac >= 20){
+        System.out.println(this.id +" kendini sildi");
+        App.musteriLock.lock();
+        try {
+        App.musteriArrayList.remove(this);
+        }
+        finally {
+          App.musteriLock.unlock();
+        }
+        stop();
+      }
+      if(App.oyunDevamBool) sayac++;
+    }
     try{
       durum = "Yemek yiyor";
 

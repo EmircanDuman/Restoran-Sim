@@ -2,12 +2,15 @@ public class Kasiyer extends Thread{
 
   static int count = 1;
   int id;
+  Integer ilgileniyor = -1;
 
   @Override
   public void run(){
     try {
       while (!isInterrupted()){
+        ilgileniyor = -1;
         if(!App.kasaArrayList.isEmpty() && App.oyunDevamBool){
+          ilgileniyor = App.kasaArrayList.get(0).id;
           App.kasaLock.lock();
           App.musteriLock.lock();
           App.masaLock.lock();
